@@ -1,3 +1,20 @@
+# 修复 SSH 环境对 terminal、process-explorer 等非文件资源查文件大小，导致报错占用 extension host 的处理资源的问题
+
+```bash
+ENOPRO: No file system provider found for resource 'vscode-terminal:/...'
+Unable to resolve filesystem provider with relative file path 'process-explorer:default'
+```
+
+```powershell
+npm i -D @vscode/vsce
+# 或者全局： npm i -g @vscode/vsce
+
+Remove-Item -Recurse -Force node_modules
+Remove-Item -Force package-lock.json
+npm install
+npx vsce package
+```
+
 # Filesize Hover Explorer
 
 See file sizes instantly by hovering over files in VS Code's Explorer. No more right-clicking or checking properties - just hover and know.

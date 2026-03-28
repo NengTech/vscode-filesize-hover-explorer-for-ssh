@@ -6,7 +6,6 @@ const vscode = require('vscode');
 async function activate() {
 	console.log('Filesize Hover Explorer is activated');
 	let decorator = await createDecoratorClass();
-
 	const watcher = vscode.workspace.createFileSystemWatcher('**/*');
 	watcher.onDidChange(uri => decorator.onFileChanged(uri));
 }
@@ -20,7 +19,7 @@ async function createDecoratorClass() {
 		constructor() {
 			this.disposables = [];
 			this._onDidChangeFileDecorations = new vscode.EventEmitter();
-            this.disposables.push(this._onDidChangeFileDecorations);
+			this.disposables.push(this._onDidChangeFileDecorations);
 			this.disposables.push(vscode.window.registerFileDecorationProvider(this));
 		}
 
@@ -32,37 +31,40 @@ async function createDecoratorClass() {
 		 * @memberof FileDecorationProvider
 		 **/
 		async provideFileDecoration(uri) {
-			const fileStats = await vscode.workspace.fs.stat(uri);
+			if (uri.scheme !== 'file') {
+				return;
+			}
 
-			if (fileStats.type === vscode.FileType.File) {
-				const fileSize = fileStats.size;
-				const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-				let size = fileSize;
-				let unitIndex = 0;
-
-				while (size >= 1024 && unitIndex < units.length - 1) {
-					size /= 1024;
-					unitIndex++;
+			try {
+				const fileStats = await vscode.workspace.fs.stat(uri);
+				if (fileStats.type === vscode.FileType.File) {
+					const fileSize = fileStats.size;
+					const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+					let size = fileSize;
+					let unitIndex = 0;
+					while (size >= 1024 && unitIndex < units.length - 1) {
+						size /= 1024;
+						unitIndex++;
+					}
+					const prettySize = `${size.toFixed(1)}${units[unitIndex]}`;
+					return {
+						tooltip: prettySize
+					};
 				}
-
-				const prettySize = `${size.toFixed(1)}${units[unitIndex]}`;
-				return {
-					tooltip: prettySize
-				};
+			} catch (e) {
+				return;
 			}
 		}
 
-		// Add this new method
-        onFileChanged(uri) {
-            this._onDidChangeFileDecorations.fire([uri]);
-        }
+		onFileChanged(uri) {
+			this._onDidChangeFileDecorations.fire([uri]);
+		}
 
-        // Add this getter
-        get onDidChangeFileDecorations() {
-            return this._onDidChangeFileDecorations.event;
-        }
+		get onDidChangeFileDecorations() {
+			return this._onDidChangeFileDecorations.event;
+		}
 
-		dispose () {
+		dispose() {
 			this.disposables.forEach((d) => d.dispose());
 		}
 	}
